@@ -1,0 +1,21 @@
+<!DOCTYPE  html>
+<html>
+	<head>
+		<title>Strobbio Tester</title>
+		<script src="strobbio.js"></script>
+		<script type="text/javascript">
+			var strobbio;
+			window.onload=function() {
+				strobbio=new Strobbio();				
+				var frame=new StrobbioFrame();
+				frame.addValue(328,11);
+				console.log(frame.getData());
+				strobbio.setFrames([frame]);				
+			}
+		</script>
+	</head>
+	<body>
+		Strobbio Test
+		<button onclick="strobbio.send();" style="display:block;width:100%;height:3em">Send</button>
+	</body>
+</html>
