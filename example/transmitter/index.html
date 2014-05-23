@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Strobbio</title>
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<script src="../../transmitter/strobbio.js"></script>
+		<script type="text/javascript">
+			var strobbio;
+			var frame;
+			var radio1;
+			var radio2;
+			var speed1;
+			var speed2;
+			
+			window.onload=function() {
+				strobbio=new Strobbio();				
+				frame=new StrobbioFrame();
+				strobbio.setFrames([frame]);
+
+				var led1Element=document.getElementById("led1");
+				var led2Element=document.getElementById("led2");
+				radio1=new ImageRadio(led1Element.getElementsByClassName("radio")[0]);
+				radio2=new ImageRadio(led2Element.getElementsByClassName("radio")[0]);
+				
+				speed1=document.getElementById("speed1");
+				speed2=document.getElementById("speed2");
+			}
+			
+			function send() {
+				frame.clear();
+				frame.addValue(radio1.selected,2); //led #1 mode (2bit)
+				frame.addValue(radio2.selected,2); //led #2 mode (2bit)
+				frame.addValue(speed1.value,3); //led #1 speed (3bit)
+				frame.addValue(speed2.value,3); //led #2 mode (3bit)
+				console.log(frame.getData());
+				strobbio.send()
+			}
+			
+			function ImageRadio(elem) {
+				var _thisobj=this;
+				this.container=elem;
+				this.images=elem.getElementsByTagName("img");
+				this.selected=-1;
+				this._select=function(index) {
+					if(index>=0&&index<this.images.length) {
+						this._clear();					
+						this.images[index].src=this.images[index].src.replace(".png",".selected.png");
+						this.selected=index;
+					}
+				}
+				this._clear=function() {
+					for(var i=0;i<_thisobj.images.length;i++) {
+						_thisobj.images[i].src=_thisobj.images[i].src.replace(".selected.png",".png");
+					}
+				}
+				this.onClickHandler=function(event) {
+					_thisobj._clear();
+					var image=event.srcElement;
+					if(image.src.indexOf(".selected.png")==-1) {
+						image.src=image.src.replace(".png",".selected.png");
+					} else {
+						image.src=image.src.replace(".selected.png",".png");
+					}
+					_thisobj.selected=image.index;
+				}				
+				for(var i=0;i<this.images.length;i++) {
+					this.images[i].onclick=_thisobj.onClickHandler;
+					this.images[i].index=i;
+				}
+				if(this.images.length>0) {this._select(0);}
+			}
+		</script>
+		<style type="text/css">
+			body {font-family:sans-serif;color:#cbdd82;background-color:#1a4c3c;text-align:center;}
+			#wrapper {max-width:800px;margin:auto;padding:0 10px 10px 10px;}
+			#wrapper h1 {font-size:1.5em}
+			button {color:#1a4c3c;background-color:#cbdd82;font-weight:bold;font-size:1.4em;height:2.8em;border:0px solid transparent;display:block;width:100%;margin:auto;outline:0px solid transparent;margin-top:20px;}
+			button:hover {cursor:pointer;}
+			button:active {background-color:#fff;}
+			.radio img {width:25%;margin:3%}
+			.radio img:hover {cursor:pointer;}
+			input[type='range']{display:block;width:100%}
+			.controls {position:relative;background-color:rgba(90,130,102,0.3);margin-bottom:10px;padding:10px;}
+			.controls h2 {position:absolute;font-size:0.9em;top:0;right:10px;opacity:0.5}
+			.input>div {width:30%;float:left;line-height:2em;color:silver}
+			.input>input {display:block;width:70%;margin-left:30%;height:2em;}
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<h1>Example</h1>
+			<div id="led1" class="controls">
+				<h2>LED #1</h2>
+				<div class="label">MODE</div>
+				<div class="radio">
+					<img src="images/mode1.png" alt=""/>
+					<img src="images/mode2.png" alt=""/>
+					<img src="images/mode3.png" alt=""/>
+				</div>
+				<div class="input">
+					<div class="label">SPEED</div>
+					<input id="speed1" type="range" name="points" min="0" max="7" value="4">
+				</div>
+			</div>
+			<div id="led2" class="controls">
+				<h2>LED #2</h2>
+				<div class="label">MODE</div>
+				<div class="radio">
+					<img src="images/mode1.png" alt=""/>
+					<img src="images/mode2.png" alt=""/>
+					<img src="images/mode3.png" alt=""/>
+				</div>
+				<div class="input">
+					<div class="label">SPEED</div>
+					<input id="speed2" type="range" name="points" min="0" max="7" value="4">
+				</div>
+			</div>
+			<button onclick="send();">SEND</button>
+		</div>
+	</body>
+</html>

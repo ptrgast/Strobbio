@@ -1,5 +1,26 @@
-//* Strobbio v0.8
-//* by ptrgast
+/*
+Strobbio v0.9.1
+
+Copyright (c) 2014 ptrgast
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 
 //style
 _strobbio_css="#strobbio-transmitter {position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:#000;font-family:sans-serif;}"
@@ -33,7 +54,6 @@ StrobbioProtocolSettings={
 
 //classes
 function Strobbio() {
-	this.version=0.1;
 	this.strings=StrobbioStrings_en;
 	//vars
 	var _thisobj=this;
@@ -82,7 +102,7 @@ function StrobbioFrame(frameLength) {
 	this._payload="";
 	//functions
 	this.addValue=function(value,length) {
-		var binary=value.toString(2);
+		var binary=(value*1).toString(2);
 		if(binary.length<=length) {
 			var extraZeros=length-binary.length;
 			for(var i=0;i<extraZeros;i++) {binary="0"+binary;}
@@ -111,6 +131,9 @@ function StrobbioFrame(frameLength) {
 			data=data+((counter+1)%2); //odd parity
 		}
 		return data;
+	}
+	this.clear=function() {
+		this._payload="";
 	}
 }
 
