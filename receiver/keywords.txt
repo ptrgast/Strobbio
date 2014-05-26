@@ -1,0 +1,10 @@
+Strobbio	KEYWORD1
+StrobbioSettings	KEYWORD1
+StrobbioFrame	KEYWORD1
+getStatus	KEYWORD2
+getData	KEYWORD2
+getSampleRate	KEYWORD2
+read	KEYWORD2
+setBit	KEYWORD2
+clear	KEYWORD2
+

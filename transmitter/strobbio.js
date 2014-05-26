@@ -1,5 +1,5 @@
 /*
-Strobbio v0.9.1
+Strobbio Transmitter v0.9.3
 
 Copyright (c) 2014 ptrgast
 
@@ -49,6 +49,7 @@ StrobbioProtocolSettings={
 	OneInterval:180,
 	ZeroInterval:60,
 	separatorInterval:120,
+	frameLength:12,
 	evenParity:true //set to false for odd parity
 }
 
@@ -93,7 +94,7 @@ function Strobbio() {
 
 function StrobbioFrame(frameLength) {
 	this.strings=StrobbioStrings_en;
-	this._frameLength=12;
+	this._frameLength=StrobbioProtocolSettings.frameLength;
 	if(frameLength&&frameLength>0) {
 		this._frameLength=frameLength;
 		if(frameLength>24) {console.log(this.strings.bigFrame);}
