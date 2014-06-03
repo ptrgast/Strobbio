@@ -1,5 +1,5 @@
 /*
-Strobbio Transmitter v0.9.3
+Strobbio Transmitter v0.9.5
 
 Copyright (c) 2014 ptrgast
 
@@ -46,9 +46,9 @@ StrobbioStrings_en={
 
 //protocol settings
 StrobbioProtocolSettings={
-	OneInterval:180,
-	ZeroInterval:60,
-	separatorInterval:120,
+	OneInterval:280,
+	ZeroInterval:100,
+	pulseInterval:80,
 	frameLength:12,
 	evenParity:true //set to false for odd parity
 }
@@ -79,7 +79,6 @@ function Strobbio() {
 		this._transmitterElement.style.display="block";
 		setTimeout(function(t){_thisobj._contentElement.style.opacity=0;},400);
 		setTimeout(function(t){
-			console.log("start");//_thisobj._transmitTimer.start();
 			var generator=new _StrobbioGenerator(
 				function(){_thisobj._transmitterElement.style.backgroundColor="#fff";}, //on high
 				function(){_thisobj._transmitterElement.style.backgroundColor="#000";}, //on low
@@ -155,27 +154,30 @@ function _StrobbioGenerator(onHigh,onLow,onEnd) {
 		//convert bits to pulse durations
 		var data=frame.getData();
 		var pulseIndex=0;
+		this._pulses[pulseIndex++]=StrobbioProtocolSettings.pulseInterval; //high
 		for(var i=0;i<data.length;i++) {
 			this._pulses[pulseIndex++]=(data[i]=="1"?StrobbioProtocolSettings.OneInterval:StrobbioProtocolSettings.ZeroInterval); //high time
-			this._pulses[pulseIndex++]=StrobbioProtocolSettings.separatorInterval; //low time
+			this._pulses[pulseIndex++]=StrobbioProtocolSettings.pulseInterval;
+			//this._pulses[pulseIndex++]=StrobbioProtocolSettings.separatorInterval; //low time
 		}
+		this._pulses[pulseIndex++]=StrobbioProtocolSettings.OneInterval; //low
 		if(data.length>0&&_thisobj.onHigh) {_thisobj.onHigh();}
-		if(!this._timer) {this._timer=setInterval(_thisobj._tick,2);}
+		//if(!this._timer) {this._timer=setInterval(_thisobj._tick,5);}
+		this._draw();
 	}
-	this._tick=function() {
+	this._draw=function() {
 		var currentDuration=_thisobj._pulses[_thisobj._index];
 		var elapsedTime=new Date().getTime()-_thisobj._startTime;
 		if(elapsedTime>=currentDuration) {
 			_thisobj._startTime=new Date().getTime();
 			_thisobj._index++;
-			if(_thisobj._index>=_thisobj._pulses.length) {
-				clearInterval(_thisobj._timer);
-				_thisobj._timer=null;
+			if(_thisobj._index>=_thisobj._pulses.length) {			
 				if(_thisobj.onEnd) {_thisobj.onEnd();}
 				return;
 			}
 			if((_thisobj._index+1)%2==0&&_thisobj.onLow) {_thisobj.onLow();}
 			else if((_thisobj._index+1)%2==1&&_thisobj.onHigh) {_thisobj.onHigh();}
 		}
+		requestAnimationFrame(_thisobj._draw);
 	}
 }
