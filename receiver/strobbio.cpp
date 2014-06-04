@@ -23,28 +23,30 @@ THE SOFTWARE.
 */
 
 #include "strobbio.h"
-
+#define DEBUG
 ////// StrobbioSettings //////
 
 StrobbioSettings::StrobbioSettings() {
-	this->oneInterval=180;
-	this->zeroInterval=60;
-	this->separatorInterval=120;
-	this->frameLength=12;
-	this->eventParity=true;
-	this->inputPin=A5;
-	this->minSampleRate=50;
+	oneInterval=280;
+	zeroInterval=100;
+	pulseInterval=80;
+	frameLength=12;
+	eventParity=true;
+	inputPin=A5;
+	maxSamplePeriod=pulseInterval/4.0f;
 }
 
 ////// StrobbioFrame //////
 
 StrobbioFrame::StrobbioFrame() {
 	data=0;
+	index=0;
 	length=StrobbioSettings().frameLength;
 }
 
 StrobbioFrame::StrobbioFrame(StrobbioSettings settings) {
 	data=0;
+	index=0;
 	length=settings.frameLength;
 }
 
@@ -62,46 +64,112 @@ void StrobbioFrame::setBit(int index) {
 	data=data|(1<<realIndex);
 }
 
+void StrobbioFrame::addBit(boolean value) {
+	if(index<length) {
+		if(value) {setBit(index);}
+		index++;		
+	}	
+}
+
+boolean StrobbioFrame::isFull() {
+	if(index==length) {return true;}
+	else {return false;}
+}
+
 void StrobbioFrame::clear() {
 	data=0;
+	index=0;
+}
+
+void StrobbioFrame::print() {
+	char output[length+1];
+	for(int i=0;i<index;i++) {output[i]=read(i,1)==1?'1':'0';}
+	for(int i=index;i<length;i++) {output[i]='-';}
+	output[length]=0;
+	Serial.println(output);
 }
 
 ////// Strobbio //////
 
 Strobbio::Strobbio() {
-	this->settings=StrobbioSettings();
+	settings=StrobbioSettings();
+	frame=new StrobbioFrame(settings);
+	previousState=INPUT_UNDEFINED;
+	previousTime=millis();
+	previousInput=analogRead(settings.inputPin);
+	previousDelta=0;
+	bitStart=0;
+	buffer=new int[settings.frameLength];
+	bufferIndex=0;
+	border=(settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
 }
 
 Strobbio::Strobbio(StrobbioSettings settings) {
 	this->settings=settings;
+	frame=new StrobbioFrame(settings);
+	previousState=INPUT_UNDEFINED;
+	previousTime=millis();
+	previousInput=analogRead(settings.inputPin);
+	previousDelta=0;
+	bitStart=0;
+	buffer=new int[settings.frameLength];
+	bufferIndex=0;
+	border=(settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
 }
 
-Strobbio::Strobbio(int inputPin) {
-	this->settings=StrobbioSettings();
-	this->settings.inputPin=inputPin;
+Strobbio::~Strobbio() {
+	delete buffer;
 }
 
 int Strobbio::getStatus() {
-	//calculate samplerate
 	unsigned int currentTime=millis();
-	sampleRate=1000/(currentTime-previousTime);
-	previousTime=currentTime;
-	if(sampleRate<settings.minSampleRate) {return STATUS_LOW_SAMPLERATE;}
+	unsigned int period=currentTime-previousTime;	
+	if(period>settings.maxSamplePeriod) {return STATUS_LOW_SAMPLERATE;} //check sampling period
 	
-	int input=analogRead(this->inputPin);
-	if(input>980) {
-	
-	} else {
-	
+	if(period>=4) {
+		int input=analogRead(settings.inputPin);
+		int delta=input-previousInput;
+		int direction=(delta-previousDelta>0)?1:-1;
+		previousDelta=delta;
+		previousInput=input;	
+		previousTime=currentTime;
+		
+		int bitDuration=currentTime-bitStart;
+		
+		if(delta>10&&direction==1&&bitStart==0) {
+			bitStart=currentTime;
+		} else if(delta>10&&direction==1&&bitStart!=0&&bitDuration>settings.pulseInterval) {
+			bitStart=currentTime;			
+			buffer[bufferIndex++]=bitDuration;
+			if(bufferIndex>=settings.frameLength) {
+				bufferIndex=0;
+				for(int i=0;i<settings.frameLength;i++) {
+					if(buffer[i]>border) {frame->addBit(true);}
+					else {frame->addBit(false);}
+				}
+			}
+		} else if(bitDuration>2*settings.oneInterval) {
+			#ifdef DEBUG
+				if(bufferIndex>0) {
+					Serial.print("border: ");
+					Serial.println(border);
+					Serial.print("intervals: ");
+					for(int i=0;i<bufferIndex;i++) {Serial.print(buffer[i]);Serial.print(" ");} 
+					Serial.println();
+				}
+			#endif			
+			bitStart=0;
+			bufferIndex=0;
+			frame->clear();
+		}
 	}
 
-	return false;
+	if(frame->isFull()) {return STATUS_DATA;}
+	else {return STATUS_WAITING;}
 }
 
 StrobbioFrame* Strobbio::getData() {
-	return NULL;
-}
-
-int Strobbio::getSampleRate() {
-	return sampleRate;
+	StrobbioFrame* tmp=frame;
+	frame=new StrobbioFrame(settings);
+	return tmp;
 }

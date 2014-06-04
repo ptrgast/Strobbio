@@ -1,5 +1,5 @@
 /*
-Strobbio Transmitter v0.9.5
+Strobbio Transmitter v1.0b
 
 Copyright (c) 2014 ptrgast
 

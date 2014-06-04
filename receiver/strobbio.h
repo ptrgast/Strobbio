@@ -1,5 +1,5 @@
 /*
-Strobbio Receiver v0.3
+Strobbio Receiver v0.6
 
 Copyright (c) 2014 ptrgast
 
@@ -39,13 +39,11 @@ class StrobbioSettings {
 	public:
 		int oneInterval;
 		int zeroInterval;
-		int separatorInterval;
+		int pulseInterval;
 		int frameLength;
 		boolean eventParity;
 		int inputPin;
-		int minSampleRate;
-		int inputState;
-		int timer;
+		int maxSamplePeriod;
 		StrobbioSettings();
 };
 
@@ -53,27 +51,36 @@ class StrobbioFrame {
 	private:
 		int length;
 		long data;
+		int index;
 	public:
 		StrobbioFrame();
 		StrobbioFrame(StrobbioSettings settings);
 		long read(int start,int length);
 		void setBit(int index);
+		void addBit(boolean value);
+		boolean isFull();
 		void clear();
+		void print();
 };
 
 class Strobbio {
 	private:
-		int inputPin;
 		StrobbioSettings settings;
+		StrobbioFrame* frame;
 		unsigned long previousTime;
-		unsigned int sampleRate;
+		unsigned int previousState;
+		unsigned long bitStart;
+		int previousInput;
+		int previousDelta;
+		int* buffer;
+		int bufferIndex;
+		int border;
 	public:
-		Strobbio(StrobbioSettings settings);
-		Strobbio(int inputPin);
 		Strobbio();
+		Strobbio(StrobbioSettings settings);
+		~Strobbio();
 		int getStatus();
 		StrobbioFrame* getData();
-		int getSampleRate();
 };
 
 #endif
