@@ -31,7 +31,7 @@ StrobbioSettings::StrobbioSettings() {
 	zeroInterval=100;
 	pulseInterval=80;
 	frameLength=12;
-	eventParity=true;
+	evenParity=true;
 	inputPin=A5;
 	maxSamplePeriod=pulseInterval/4.0f;
 }
@@ -41,13 +41,16 @@ StrobbioSettings::StrobbioSettings() {
 StrobbioFrame::StrobbioFrame() {
 	data=0;
 	index=0;
-	length=StrobbioSettings().frameLength;
+	StrobbioSettings settings=StrobbioSettings();
+	length=settings.frameLength;
+	evenParity=settings.evenParity;
 }
 
 StrobbioFrame::StrobbioFrame(StrobbioSettings settings) {
 	data=0;
 	index=0;
 	length=settings.frameLength;
+	evenParity=settings.evenParity;
 }
 
 long StrobbioFrame::read(int start, int length) {
@@ -73,6 +76,15 @@ void StrobbioFrame::addBit(boolean value) {
 
 boolean StrobbioFrame::isFull() {
 	if(index==length) {return true;}
+	else {return false;}
+}
+
+boolean StrobbioFrame::isIntegral() {
+	if(!isFull()) {return false;}
+	int counter=0;
+	for(int i=0;i<length;i++) {if(read(i,1)==1) {counter++;}}
+	if(!evenParity) {counter++;}
+	if(counter%2==0) {return true;}
 	else {return false;}
 }
 
@@ -145,18 +157,18 @@ int Strobbio::getStatus() {
 				bufferIndex=0;
 				for(int i=0;i<settings.frameLength;i++) {
 					if(buffer[i]>border) {frame->addBit(true);}
-					else {frame->addBit(false);}
+					else if(buffer[i]>settings.zeroInterval) {frame->addBit(false);}
 				}
 			}
 		} else if(bitDuration>2*settings.oneInterval) {
 			#ifdef DEBUG
-				if(bufferIndex>0) {
-					Serial.print("border: ");
-					Serial.println(border);
-					Serial.print("intervals: ");
-					for(int i=0;i<bufferIndex;i++) {Serial.print(buffer[i]);Serial.print(" ");} 
-					Serial.println();
-				}
+			if(bufferIndex>0) {
+				Serial.print("border: ");
+				Serial.println(border);
+				Serial.print("intervals: ");
+				for(int i=0;i<bufferIndex;i++) {Serial.print(buffer[i]);Serial.print(" ");} 
+				Serial.println();
+			}
 			#endif			
 			bitStart=0;
 			bufferIndex=0;
@@ -164,7 +176,10 @@ int Strobbio::getStatus() {
 		}
 	}
 
-	if(frame->isFull()) {return STATUS_DATA;}
+	if(frame->isFull()&&frame->isIntegral()) {return STATUS_DATA;}
+	#ifdef DEBUG
+	else if(frame->isFull()) {Serial.print("invalid frame:");frame->print();frame->clear();}
+	#endif
 	else {return STATUS_WAITING;}
 }
 

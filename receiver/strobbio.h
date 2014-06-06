@@ -1,5 +1,5 @@
 /*
-Strobbio Receiver v0.6
+Strobbio Receiver v0.7
 
 Copyright (c) 2014 ptrgast
 
@@ -41,7 +41,7 @@ class StrobbioSettings {
 		int zeroInterval;
 		int pulseInterval;
 		int frameLength;
-		boolean eventParity;
+		boolean evenParity;
 		int inputPin;
 		int maxSamplePeriod;
 		StrobbioSettings();
@@ -50,8 +50,9 @@ class StrobbioSettings {
 class StrobbioFrame {
 	private:
 		int length;
+		boolean evenParity;
 		long data;
-		int index;
+		int index;		
 	public:
 		StrobbioFrame();
 		StrobbioFrame(StrobbioSettings settings);
@@ -59,6 +60,7 @@ class StrobbioFrame {
 		void setBit(int index);
 		void addBit(boolean value);
 		boolean isFull();
+		boolean isIntegral();
 		void clear();
 		void print();
 };

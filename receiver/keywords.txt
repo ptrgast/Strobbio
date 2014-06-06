@@ -7,5 +7,6 @@ read	KEYWORD2
 setBit	KEYWORD2
 addBit	KEYWORD2
 isFull	KEYWORD2
+isIntegral	KEYWORD2
 clear	KEYWORD2
 print	KEYWORD2

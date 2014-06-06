@@ -81,8 +81,10 @@
 			.radio img {width:25%;margin:3%}
 			.radio img:hover {cursor:pointer;}
 			input[type='range']{display:block;width:100%}
-			.controls {position:relative;background-color:rgba(90,130,102,0.3);margin-bottom:10px;padding:10px;}
-			.controls h2 {position:absolute;font-size:0.9em;top:0;right:10px;opacity:0.5}
+			.controls {position:relative;margin-bottom:10px;padding:10px;background-color:rgba(90,130,102,0.3);}
+			#led1.controls h2 {color:#fff;background-color:rgba(80,200,10,0.8);padding:3px;}
+			#led2.controls h2 {color:#fff;background-color:rgba(200,50,40,0.8);padding:3px;}
+			.controls h2 {position:absolute;font-size:0.9em;top:-5px;right:0px;opacity:0.7;box-shadow:1px 1px 2px #000}
 			.input>div {width:30%;float:left;line-height:2em;color:silver}
 			.input>input {display:block;width:70%;margin-left:30%;height:2em;}
 		</style>
@@ -91,7 +93,7 @@
 		<div id="wrapper">
 			<h1>Example</h1>
 			<div id="led1" class="controls">
-				<h2>LED #1</h2>
+				<h2>LED A</h2>
 				<div class="label">MODE</div>
 				<div class="radio">
 					<img src="images/mode1.png" alt=""/>
@@ -100,11 +102,11 @@
 				</div>
 				<div class="input">
 					<div class="label">SPEED</div>
-					<input id="speed1" type="range" name="points" min="0" max="7" value="4">
+					<input id="speed1" type="range" name="points" min="0" max="7" value="0">
 				</div>
 			</div>
 			<div id="led2" class="controls">
-				<h2>LED #2</h2>
+				<h2>LED B</h2>
 				<div class="label">MODE</div>
 				<div class="radio">
 					<img src="images/mode1.png" alt=""/>
@@ -113,7 +115,7 @@
 				</div>
 				<div class="input">
 					<div class="label">SPEED</div>
-					<input id="speed2" type="range" name="points" min="0" max="7" value="4">
+					<input id="speed2" type="range" name="points" min="0" max="7" value="0">
 				</div>
 			</div>
 			<button onclick="send();">SEND</button>
