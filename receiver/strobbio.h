@@ -1,7 +1,7 @@
 /*
-Strobbio Receiver v0.7
+Strobbio Receiver v1.0.0
 
-Copyright (c) 2014 ptrgast
+Copyright (c) 2017 ptrgast
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -61,6 +61,7 @@ class StrobbioFrame {
 		void addBit(boolean value);
 		boolean isFull();
 		boolean isIntegral();
+    void copyTo(StrobbioFrame*);
 		void clear();
 		void print();
 };
@@ -68,7 +69,7 @@ class StrobbioFrame {
 class Strobbio {
 	private:
 		StrobbioSettings settings;
-		StrobbioFrame* frame;
+		StrobbioFrame frame;
 		unsigned long previousTime;
 		unsigned int previousState;
 		unsigned long bitStart;
@@ -82,7 +83,7 @@ class Strobbio {
 		Strobbio(StrobbioSettings settings);
 		~Strobbio();
 		int getStatus();
-		StrobbioFrame* getData();
+		void getData(StrobbioFrame*);
 };
 
 #endif

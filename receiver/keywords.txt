@@ -8,5 +8,6 @@ setBit	KEYWORD2
 addBit	KEYWORD2
 isFull	KEYWORD2
 isIntegral	KEYWORD2
+copyTo	KEYWORD2
 clear	KEYWORD2
 print	KEYWORD2

@@ -1,7 +1,7 @@
 /*
 Strobbio Receiver
 
-Copyright (c) 2014 ptrgast
+Copyright (c) 2017 ptrgast
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -88,6 +88,13 @@ boolean StrobbioFrame::isIntegral() {
 	else {return false;}
 }
 
+void StrobbioFrame::copyTo(StrobbioFrame* frame) {
+  frame->length = this->length;
+  frame->evenParity = this->evenParity;
+  frame->data = this->data;
+  frame->index = this->index;  
+}
+
 void StrobbioFrame::clear() {
 	data=0;
 	index=0;
@@ -104,29 +111,29 @@ void StrobbioFrame::print() {
 ////// Strobbio //////
 
 Strobbio::Strobbio() {
-	settings=StrobbioSettings();
-	frame=new StrobbioFrame(settings);
-	previousState=INPUT_UNDEFINED;
-	previousTime=millis();
-	previousInput=analogRead(settings.inputPin);
-	previousDelta=0;
-	bitStart=0;
-	buffer=new int[settings.frameLength];
-	bufferIndex=0;
-	border=(settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
+	settings = StrobbioSettings();
+	frame = StrobbioFrame(settings);
+	previousState = INPUT_UNDEFINED;
+	previousTime = millis();
+	previousInput = analogRead(settings.inputPin);
+	previousDelta = 0;
+	bitStart = 0;
+	buffer = new int[settings.frameLength];
+	bufferIndex = 0;
+	border = (settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
 }
 
 Strobbio::Strobbio(StrobbioSettings settings) {
-	this->settings=settings;
-	frame=new StrobbioFrame(settings);
-	previousState=INPUT_UNDEFINED;
-	previousTime=millis();
-	previousInput=analogRead(settings.inputPin);
-	previousDelta=0;
-	bitStart=0;
-	buffer=new int[settings.frameLength];
-	bufferIndex=0;
-	border=(settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
+	this->settings = settings;
+	frame = StrobbioFrame(settings);
+	previousState = INPUT_UNDEFINED;
+	previousTime = millis();
+	previousInput = analogRead(settings.inputPin);
+	previousDelta = 0;
+	bitStart = 0;
+	buffer = new int[settings.frameLength];
+	bufferIndex = 0;
+	border = (settings.oneInterval+settings.zeroInterval+settings.pulseInterval*2)/2;
 }
 
 Strobbio::~Strobbio() {
@@ -136,7 +143,6 @@ Strobbio::~Strobbio() {
 int Strobbio::getStatus() {
 	unsigned int currentTime=millis();
 	unsigned int period=currentTime-previousTime;	
-	if(period>settings.maxSamplePeriod) {return STATUS_LOW_SAMPLERATE;} //check sampling period
 	
 	if(period>=4) {
 		int input=analogRead(settings.inputPin);
@@ -145,19 +151,24 @@ int Strobbio::getStatus() {
 		previousDelta=delta;
 		previousInput=input;	
 		previousTime=currentTime;
-		
+
+    if(period>settings.maxSamplePeriod) {return STATUS_LOW_SAMPLERATE;} //check sampling period
+
 		int bitDuration=currentTime-bitStart;
 		
 		if(delta>10&&direction==1&&bitStart==0) {
 			bitStart=currentTime;
 		} else if(delta>10&&direction==1&&bitStart!=0&&bitDuration>settings.pulseInterval) {
-			bitStart=currentTime;			
+			bitStart=currentTime;
+      #ifdef DEBUG
+      Serial.print("bit "); Serial.print(bufferIndex); Serial.print(":"); Serial.println(bitDuration);
+      #endif
 			buffer[bufferIndex++]=bitDuration;
 			if(bufferIndex>=settings.frameLength) {
 				bufferIndex=0;
 				for(int i=0;i<settings.frameLength;i++) {
-					if(buffer[i]>border) {frame->addBit(true);}
-					else if(buffer[i]>settings.zeroInterval) {frame->addBit(false);}
+					if(buffer[i]>border) {frame.addBit(true);}
+					else if(buffer[i]>settings.zeroInterval) {frame.addBit(false);}
 				}
 			}
 		} else if(bitDuration>2*settings.oneInterval) {
@@ -172,19 +183,18 @@ int Strobbio::getStatus() {
 			#endif			
 			bitStart=0;
 			bufferIndex=0;
-			frame->clear();
+			frame.clear();
 		}
 	}
 
-	if(frame->isFull()&&frame->isIntegral()) {return STATUS_DATA;}
+	if(frame.isFull()&&frame.isIntegral()) {return STATUS_DATA;}
 	#ifdef DEBUG
-	else if(frame->isFull()) {Serial.print("invalid frame:");frame->print();frame->clear();}
+	else if(frame.isFull()) {Serial.print("invalid frame:");frame.print();frame.clear();}
 	#endif
 	else {return STATUS_WAITING;}
 }
 
-StrobbioFrame* Strobbio::getData() {
-	StrobbioFrame* tmp=frame;
-	frame=new StrobbioFrame(settings);
-	return tmp;
+void Strobbio::getData(StrobbioFrame* frame) {
+  this->frame.copyTo(frame);
+  this->frame.clear();
 }

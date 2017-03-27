@@ -6,6 +6,7 @@
 #define PERIOD 20000
 #define PERIOD_STEP 2700
 
+StrobbioFrame frame = StrobbioFrame();
 Strobbio receiver = Strobbio(); //Create a receiver
 
 int ledA=9;
@@ -33,26 +34,25 @@ void loop() {
   //output values
   analogWrite(ledA,valueA);
   analogWrite(ledB,valueB);
-  
+
   //Get receiver's status
-  int strobbioStatus=receiver.getStatus(); 
+  int strobbioStatus=receiver.getStatus();
   //Handle status
   if(strobbioStatus==STATUS_DATA) { //Data arrived
-    StrobbioFrame* frame=receiver.getData();
-    modeA=frame->read(0,2);
-    modeB=frame->read(2,2);
-    periodA=PERIOD-frame->read(4,3)*PERIOD_STEP;
-    periodB=PERIOD-frame->read(7,3)*PERIOD_STEP;
+    receiver.getData(&frame);
+    modeA=frame.read(0,2);
+    modeB=frame.read(2,2);
+    periodA=PERIOD-frame.read(4,3)*PERIOD_STEP;
+    periodB=PERIOD-frame.read(7,3)*PERIOD_STEP;
     Serial.print("received: ");
-    frame->print();
-    delete frame;
+    frame.print();
   } else if(strobbioStatus==STATUS_LOW_SAMPLERATE) { //Low sample rate. Strobbio will not work
     Serial.println("Low sample rate!");
   }
-  
+
 }
 
-void calculateValue(int* value, int t, int period, int mode) {  
+void calculateValue(int* value, int t, int period, int mode) {
   switch(mode) {
     case MODE_INOUT:
       if(t<=period/2) {*value=(int)(2*t/(float)period*255);}
@@ -66,4 +66,3 @@ void calculateValue(int* value, int t, int period, int mode) {
       break;
   }
 }
-
